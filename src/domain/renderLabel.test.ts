@@ -4,22 +4,24 @@ import { getCanvasSize, getLabelSize } from "./labels";
 import { fitFontSize, renderTextLabel } from "./renderLabel";
 
 describe("label sizing", () => {
-  it("uses the D11_H printhead width for 12x22 labels", () => {
+  it("uses length x printhead canvas dimensions for 12x22 labels", () => {
     expect(getCanvasSize(getLabelSize("12x22"))).toEqual({
-      width: 142,
-      height: 264
+      width: 264,
+      height: 144
     });
   });
 
-  it("uses the D11_H printhead width for 12x30 labels", () => {
+  it("uses length x printhead canvas dimensions for 12x30 labels", () => {
     expect(getCanvasSize(getLabelSize("12x30"))).toEqual({
-      width: 142,
-      height: 360
+      width: 360,
+      height: 144
     });
   });
 
-  it("uses a length pixel count that the NIIMBOT encoder can pack into bytes", () => {
+  it("uses dimensions that the left-direction NIIMBOT encoder can pack into bytes", () => {
+    expect(getCanvasSize(getLabelSize("12x22")).width % 8).toBe(0);
     expect(getCanvasSize(getLabelSize("12x22")).height % 8).toBe(0);
+    expect(getCanvasSize(getLabelSize("12x30")).width % 8).toBe(0);
     expect(getCanvasSize(getLabelSize("12x30")).height % 8).toBe(0);
   });
 });
@@ -32,10 +34,10 @@ describe("renderTextLabel", () => {
   it("creates a canvas matching the selected label size", () => {
     const rendered = renderTextLabel("Hello", getLabelSize("12x22"));
 
-    expect(rendered.width).toBe(142);
-    expect(rendered.height).toBe(264);
-    expect(rendered.canvas.width).toBe(142);
-    expect(rendered.canvas.height).toBe(264);
+    expect(rendered.width).toBe(264);
+    expect(rendered.height).toBe(144);
+    expect(rendered.canvas.width).toBe(264);
+    expect(rendered.canvas.height).toBe(144);
     expect(rendered.fontSize).toBeGreaterThan(0);
   });
 
@@ -43,6 +45,14 @@ describe("renderTextLabel", () => {
     const rendered = renderTextLabel("문석민", getLabelSize("12x22"));
 
     expect(() => ImageEncoder.encodeCanvas(rendered.canvas, "left")).not.toThrow();
+  });
+
+  it("encodes label length as rows and printhead width as columns", () => {
+    const rendered = renderTextLabel("문석민", getLabelSize("12x22"));
+    const encoded = ImageEncoder.encodeCanvas(rendered.canvas, "left");
+
+    expect(encoded.cols).toBe(144);
+    expect(encoded.rows).toBe(264);
   });
 });
 

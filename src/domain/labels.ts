@@ -31,7 +31,7 @@ export function nextMultipleOf8(value: number): number {
 
 export function getCanvasSize(size: LabelSize): { width: number; height: number } {
   return {
-    width: D11H_PRINTHEAD_PIXELS,
-    height: nextMultipleOf8(mmToPixels(size.lengthMm))
+    width: nextMultipleOf8(mmToPixels(size.lengthMm)),
+    height: nextMultipleOf8(D11H_PRINTHEAD_PIXELS)
   };
 }
