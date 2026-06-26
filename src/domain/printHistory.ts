@@ -59,6 +59,29 @@ export function savePrintedLabel(
   return next;
 }
 
+export function removePrintedLabel(
+  history: PrintHistoryItem[],
+  target: PrintHistoryItem,
+  storage: Storage = localStorage
+): PrintHistoryItem[] {
+  const next = sortPrintHistory(
+    history.filter(
+      (item) =>
+        item.text !== target.text ||
+        item.labelSize !== target.labelSize ||
+        item.printedAt !== target.printedAt
+    )
+  );
+
+  storage.setItem(STORAGE_KEY, JSON.stringify(next));
+  return next;
+}
+
+export function clearPrintHistory(storage: Storage = localStorage): PrintHistoryItem[] {
+  storage.removeItem(STORAGE_KEY);
+  return [];
+}
+
 export function sortPrintHistory(history: PrintHistoryItem[]): PrintHistoryItem[] {
   return [...history].sort((a, b) => {
     const textOrder = collator.compare(a.text, b.text);

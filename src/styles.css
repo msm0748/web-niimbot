@@ -119,6 +119,23 @@ button:first-child {
   color: #1f2937;
 }
 
+.text-button {
+  height: 34px;
+  border-color: #d8dde3;
+  background: #ffffff;
+  color: #1f2937;
+}
+
+.text-button.danger {
+  color: #b42318;
+}
+
+.danger-button {
+  background: #b42318;
+  border-color: #b42318;
+  color: #ffffff;
+}
+
 .preview {
   display: grid;
   place-items: center;
@@ -203,11 +220,18 @@ button:first-child {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  margin-bottom: 10px;
 }
 
 .section-heading span {
   color: #687076;
   font-size: 13px;
+}
+
+.history-heading-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .history ol {
@@ -219,6 +243,12 @@ button:first-child {
   list-style: none;
 }
 
+.history-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 6px;
+}
+
 .history-item {
   display: grid;
   width: 100%;
@@ -228,6 +258,16 @@ button:first-child {
   background: #ffffff;
   color: #202124;
   text-align: left;
+}
+
+.delete-history-button {
+  width: 68px;
+  height: auto;
+  min-height: 52px;
+  border-color: #f0c9c4;
+  background: #fff8f7;
+  color: #b42318;
+  font-size: 13px;
 }
 
 .history-item span {
@@ -247,6 +287,37 @@ button:first-child {
   font-size: 14px;
 }
 
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgb(17 24 39 / 45%);
+  z-index: 20;
+}
+
+.confirm-modal {
+  width: min(420px, 100%);
+  border: 1px solid #d8dde3;
+  border-radius: 8px;
+  padding: 18px;
+  background: #ffffff;
+  box-shadow: 0 18px 48px rgb(17 24 39 / 20%);
+}
+
+.confirm-modal p {
+  margin-top: 8px;
+  color: #4b5563;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 18px;
+}
+
 @media (max-width: 680px) {
   .toolbar,
   .controls {
@@ -260,5 +331,9 @@ button:first-child {
   .actions {
     display: grid;
     grid-template-columns: 1fr 1fr;
+  }
+
+  .history ol {
+    grid-template-columns: 1fr;
   }
 }

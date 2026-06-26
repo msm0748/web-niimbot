@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { loadPrintHistory, savePrintedLabel, sortPrintHistory, type PrintHistoryItem } from "./printHistory";
+import {
+  clearPrintHistory,
+  loadPrintHistory,
+  removePrintedLabel,
+  savePrintedLabel,
+  sortPrintHistory,
+  type PrintHistoryItem
+} from "./printHistory";
 
 describe("print history", () => {
   it("sorts Korean labels alphabetically", () => {
@@ -33,6 +40,29 @@ describe("print history", () => {
       { text: "문석민", labelSize: "12x22", printedAt: "2026-01-02T00:00:00.000Z" }
     ]);
     expect(loadPrintHistory(storage)).toEqual(second);
+  });
+
+  it("removes one printed label", () => {
+    const storage = new MemoryStorage();
+    const history: PrintHistoryItem[] = [
+      { text: "김철수", labelSize: "12x22", printedAt: "2026-01-01T00:00:00.000Z" },
+      { text: "문석민", labelSize: "12x30", printedAt: "2026-01-02T00:00:00.000Z" }
+    ];
+
+    const next = removePrintedLabel(history, history[0], storage);
+
+    expect(next).toEqual([
+      { text: "문석민", labelSize: "12x30", printedAt: "2026-01-02T00:00:00.000Z" }
+    ]);
+    expect(loadPrintHistory(storage)).toEqual(next);
+  });
+
+  it("clears all printed labels", () => {
+    const storage = new MemoryStorage();
+    savePrintedLabel([], "문석민", "12x22", storage, new Date("2026-01-01T00:00:00.000Z"));
+
+    expect(clearPrintHistory(storage)).toEqual([]);
+    expect(loadPrintHistory(storage)).toEqual([]);
   });
 });
 

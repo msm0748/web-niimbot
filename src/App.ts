@@ -1,5 +1,11 @@
 import { DEFAULT_LABEL_SIZE_ID, getLabelSize, LABEL_SIZES, type LabelSizeId } from "./domain/labels";
-import { loadPrintHistory, savePrintedLabel, type PrintHistoryItem } from "./domain/printHistory";
+import {
+  clearPrintHistory,
+  loadPrintHistory,
+  removePrintedLabel,
+  savePrintedLabel,
+  type PrintHistoryItem
+} from "./domain/printHistory";
 import { renderTextLabel } from "./domain/renderLabel";
 import { describePrinterError } from "./printer/NiimbotPrinter";
 import { WebBluetoothNiimbotPrinter } from "./printer/WebBluetoothNiimbotPrinter";
@@ -12,11 +18,19 @@ type LogEntry = {
   timestamp: string;
 };
 
+type PendingDelete =
+  | { kind: "all" }
+  | {
+      kind: "one";
+      item: PrintHistoryItem;
+    };
+
 export class App {
   private readonly printer = new WebBluetoothNiimbotPrinter();
   private selectedSize: LabelSizeId = DEFAULT_LABEL_SIZE_ID;
   private text = "";
   private printHistory: PrintHistoryItem[] = loadPrintHistory();
+  private pendingDelete: PendingDelete | null = null;
   private logs: LogEntry[] = [
     { level: "info", message: "Ready. Open in Chrome on localhost.", timestamp: now() }
   ];
@@ -78,7 +92,14 @@ export class App {
         <section class="history" aria-label="Printed labels">
           <div class="section-heading">
             <h2>Printed Labels</h2>
-            <span>${this.printHistory.length}</span>
+            <div class="history-heading-actions">
+              <span>${this.printHistory.length}</span>
+              ${
+                this.printHistory.length > 0
+                  ? `<button class="text-button danger" id="clear-history-button" type="button">Clear All</button>`
+                  : ""
+              }
+            </div>
           </div>
           ${
             this.printHistory.length > 0
@@ -87,10 +108,13 @@ export class App {
                     .map(
                       (item, index) => `
                         <li>
-                          <button class="history-item" type="button" data-history-index="${index}">
-                            <span>${escapeHtml(item.text)}</span>
-                            <small>${LABEL_SIZES[item.labelSize].label}</small>
-                          </button>
+                          <div class="history-row">
+                            <button class="history-item" type="button" data-history-index="${index}">
+                              <span>${escapeHtml(item.text)}</span>
+                              <small>${LABEL_SIZES[item.labelSize].label}</small>
+                            </button>
+                            <button class="delete-history-button" type="button" data-delete-history-index="${index}" aria-label="Delete ${escapeHtml(item.text)}">Delete</button>
+                          </div>
                         </li>`
                     )
                     .join("")}
@@ -98,6 +122,7 @@ export class App {
               : `<p class="empty-history">No printed labels yet.</p>`
           }
         </section>
+        ${this.pendingDelete ? this.renderDeleteModal() : ""}
       </section>
     `;
 
@@ -137,6 +162,44 @@ export class App {
         this.loadHistoryItem(Number(button.dataset.historyIndex));
       });
     });
+
+    this.root.querySelector<HTMLButtonElement>("#clear-history-button")?.addEventListener("click", () => {
+      this.pendingDelete = { kind: "all" };
+      this.render();
+    });
+
+    this.root.querySelectorAll<HTMLButtonElement>("[data-delete-history-index]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const item = this.printHistory[Number(button.dataset.deleteHistoryIndex)];
+
+        if (!item) {
+          return;
+        }
+
+        this.pendingDelete = { kind: "one", item };
+        this.render();
+      });
+    });
+
+    this.root.querySelector<HTMLButtonElement>("#cancel-delete-button")?.addEventListener("click", () => {
+      this.closeDeleteModal();
+    });
+
+    this.root.querySelector<HTMLButtonElement>("#confirm-delete-button")?.addEventListener("click", () => {
+      this.confirmDelete();
+    });
+
+    this.root.querySelector<HTMLDivElement>(".modal-backdrop")?.addEventListener("click", (event) => {
+      if (event.target === event.currentTarget) {
+        this.closeDeleteModal();
+      }
+    });
+
+    this.root.querySelector<HTMLDivElement>(".modal-backdrop")?.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") {
+        this.closeDeleteModal();
+      }
+    });
   }
 
   private async connect(): Promise<void> {
@@ -172,6 +235,50 @@ export class App {
     this.selectedSize = item.labelSize;
     this.render();
     this.root.querySelector<HTMLInputElement>("#label-text")?.focus();
+  }
+
+  private confirmDelete(): void {
+    if (!this.pendingDelete) {
+      return;
+    }
+
+    if (this.pendingDelete.kind === "all") {
+      this.printHistory = clearPrintHistory();
+      this.pendingDelete = null;
+      this.addLog("info", "Printed label history cleared.");
+      return;
+    }
+
+    this.printHistory = removePrintedLabel(this.printHistory, this.pendingDelete.item);
+    this.pendingDelete = null;
+    this.addLog("info", "Printed label removed.");
+  }
+
+  private closeDeleteModal(): void {
+    this.pendingDelete = null;
+    this.render();
+  }
+
+  private renderDeleteModal(): string {
+    const pendingDelete = this.pendingDelete;
+    const isAll = pendingDelete?.kind === "all";
+    const title = isAll ? "Clear printed labels?" : "Delete printed label?";
+    const body = isAll
+      ? "This will remove every saved printed label from this browser."
+      : `Delete "${escapeHtml(pendingDelete?.kind === "one" ? pendingDelete.item.text : "")}" from printed labels?`;
+
+    return `
+      <div class="modal-backdrop" role="presentation" tabindex="-1">
+        <section class="confirm-modal" role="dialog" aria-modal="true" aria-labelledby="delete-modal-title">
+          <h2 id="delete-modal-title">${title}</h2>
+          <p>${body}</p>
+          <div class="modal-actions">
+            <button class="text-button" id="cancel-delete-button" type="button">Cancel</button>
+            <button class="danger-button" id="confirm-delete-button" type="button">Delete</button>
+          </div>
+        </section>
+      </div>
+    `;
   }
 
   private addLog(level: LogLevel, message: string): void {

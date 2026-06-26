@@ -36,8 +36,51 @@ test("shows stored printed labels sorted in Korean order and reloads a label", a
   const labels = page.locator(".history-item span");
   await expect(labels).toHaveText(["김철수", "라벨", "문석민"]);
 
-  await page.getByRole("button", { name: /김철수/ }).click();
+  await page.getByRole("button", { name: "김철수 12 x 22 mm" }).click();
 
   await expect(page.getByLabel("Text")).toHaveValue("김철수");
   await expect(page.getByLabel("Label size")).toHaveValue("12x22");
+});
+
+test("deletes one printed label after confirmation", async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem(
+      "web-niimbot.printHistory",
+      JSON.stringify([
+        { text: "문석민", labelSize: "12x30", printedAt: "2026-01-01T00:00:00.000Z" },
+        { text: "김철수", labelSize: "12x22", printedAt: "2026-01-01T00:00:00.000Z" }
+      ])
+    );
+  });
+
+  await page.goto("/");
+  await page.getByLabel("Delete 김철수").click();
+
+  const dialog = page.getByRole("dialog", { name: "Delete printed label?" });
+  await expect(dialog).toBeVisible();
+  await dialog.getByRole("button", { name: "Delete" }).click();
+
+  await expect(page.locator(".history-item span")).toHaveText(["문석민"]);
+});
+
+test("clears all printed labels after confirmation", async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem(
+      "web-niimbot.printHistory",
+      JSON.stringify([
+        { text: "문석민", labelSize: "12x30", printedAt: "2026-01-01T00:00:00.000Z" },
+        { text: "김철수", labelSize: "12x22", printedAt: "2026-01-01T00:00:00.000Z" }
+      ])
+    );
+  });
+
+  await page.goto("/");
+  await page.getByRole("button", { name: "Clear All" }).click();
+
+  const dialog = page.getByRole("dialog", { name: "Clear printed labels?" });
+  await expect(dialog).toBeVisible();
+  await dialog.getByRole("button", { name: "Delete" }).click();
+
+  await expect(page.getByText("No printed labels yet.")).toBeVisible();
+  await expect(page.locator(".history-item")).toHaveCount(0);
 });
