@@ -233,7 +233,9 @@ export class App {
       this.addLog("info", `Printing ${LABEL_SIZES[this.selectedSize].label} label...`);
       await this.printer.print(rendered);
       this.printHistory = savePrintedLabel(this.printHistory, this.text, this.selectedSize);
+      this.text = "";
       this.addLog("success", "Print finished.");
+      this.root.querySelector<HTMLInputElement>("#label-text")?.focus();
     } catch (error) {
       this.addLog("error", describePrinterError(error));
     }
