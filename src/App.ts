@@ -86,7 +86,7 @@ export class App {
 
     this.root.querySelector<HTMLInputElement>("#label-text")?.addEventListener("input", (event) => {
       this.text = (event.target as HTMLInputElement).value;
-      this.render();
+      this.updatePreviewText();
     });
 
     this.root.querySelector<HTMLButtonElement>("#connect-button")?.addEventListener("click", () => {
@@ -129,6 +129,14 @@ export class App {
     if (this.printer.status === "printing") return "Printing";
     if (this.printer.status === "disconnected") return "Disconnected";
     return "Not connected";
+  }
+
+  private updatePreviewText(): void {
+    const previewText = this.root.querySelector<HTMLSpanElement>(".label-preview span");
+
+    if (previewText) {
+      previewText.textContent = this.text || "Preview";
+    }
   }
 }
 
