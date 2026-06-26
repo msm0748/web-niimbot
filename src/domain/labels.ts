@@ -25,9 +25,13 @@ export function mmToPixels(mm: number, dpi = D11H_DPI): number {
   return Math.round((mm / 25.4) * dpi);
 }
 
+export function nextMultipleOf8(value: number): number {
+  return Math.ceil(value / 8) * 8;
+}
+
 export function getCanvasSize(size: LabelSize): { width: number; height: number } {
   return {
     width: D11H_PRINTHEAD_PIXELS,
-    height: mmToPixels(size.lengthMm)
+    height: nextMultipleOf8(mmToPixels(size.lengthMm))
   };
 }
