@@ -158,11 +158,16 @@ button:first-child {
   height: 96px;
 }
 
-.log {
+.log,
+.history {
   border: 1px solid #d8dde3;
   border-radius: 8px;
   padding: 14px;
   background: #ffffff;
+}
+
+.log {
+  margin-bottom: 18px;
 }
 
 .log ol {
@@ -191,6 +196,55 @@ button:first-child {
 
 .log li.error {
   color: #b42318;
+}
+
+.section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.section-heading span {
+  color: #687076;
+  font-size: 13px;
+}
+
+.history ol {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.history-item {
+  display: grid;
+  width: 100%;
+  height: auto;
+  min-height: 52px;
+  border-color: #d8dde3;
+  background: #ffffff;
+  color: #202124;
+  text-align: left;
+}
+
+.history-item span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 700;
+}
+
+.history-item small {
+  color: #687076;
+  font-size: 12px;
+}
+
+.empty-history {
+  color: #687076;
+  font-size: 14px;
 }
 
 @media (max-width: 680px) {

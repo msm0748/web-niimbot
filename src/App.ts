@@ -1,4 +1,5 @@
 import { DEFAULT_LABEL_SIZE_ID, getLabelSize, LABEL_SIZES, type LabelSizeId } from "./domain/labels";
+import { loadPrintHistory, savePrintedLabel, type PrintHistoryItem } from "./domain/printHistory";
 import { renderTextLabel } from "./domain/renderLabel";
 import { describePrinterError } from "./printer/NiimbotPrinter";
 import { WebBluetoothNiimbotPrinter } from "./printer/WebBluetoothNiimbotPrinter";
@@ -15,6 +16,7 @@ export class App {
   private readonly printer = new WebBluetoothNiimbotPrinter();
   private selectedSize: LabelSizeId = DEFAULT_LABEL_SIZE_ID;
   private text = "";
+  private printHistory: PrintHistoryItem[] = loadPrintHistory();
   private logs: LogEntry[] = [
     { level: "info", message: "Ready. Open in Chrome on localhost.", timestamp: now() }
   ];
@@ -72,6 +74,30 @@ export class App {
               .join("")}
           </ol>
         </section>
+
+        <section class="history" aria-label="Printed labels">
+          <div class="section-heading">
+            <h2>Printed Labels</h2>
+            <span>${this.printHistory.length}</span>
+          </div>
+          ${
+            this.printHistory.length > 0
+              ? `<ol>
+                  ${this.printHistory
+                    .map(
+                      (item, index) => `
+                        <li>
+                          <button class="history-item" type="button" data-history-index="${index}">
+                            <span>${escapeHtml(item.text)}</span>
+                            <small>${LABEL_SIZES[item.labelSize].label}</small>
+                          </button>
+                        </li>`
+                    )
+                    .join("")}
+                </ol>`
+              : `<p class="empty-history">No printed labels yet.</p>`
+          }
+        </section>
       </section>
     `;
 
@@ -89,12 +115,27 @@ export class App {
       this.updatePreviewText();
     });
 
+    this.root.querySelector<HTMLInputElement>("#label-text")?.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter" || event.isComposing) {
+        return;
+      }
+
+      event.preventDefault();
+      void this.print();
+    });
+
     this.root.querySelector<HTMLButtonElement>("#connect-button")?.addEventListener("click", () => {
       void this.connect();
     });
 
     this.root.querySelector<HTMLButtonElement>("#print-button")?.addEventListener("click", () => {
       void this.print();
+    });
+
+    this.root.querySelectorAll<HTMLButtonElement>("[data-history-index]").forEach((button) => {
+      button.addEventListener("click", () => {
+        this.loadHistoryItem(Number(button.dataset.historyIndex));
+      });
     });
   }
 
@@ -113,10 +154,24 @@ export class App {
       const rendered = renderTextLabel(this.text, getLabelSize(this.selectedSize));
       this.addLog("info", `Printing ${LABEL_SIZES[this.selectedSize].label} label...`);
       await this.printer.print(rendered);
+      this.printHistory = savePrintedLabel(this.printHistory, this.text, this.selectedSize);
       this.addLog("success", "Print finished.");
     } catch (error) {
       this.addLog("error", describePrinterError(error));
     }
+  }
+
+  private loadHistoryItem(index: number): void {
+    const item = this.printHistory[index];
+
+    if (!item) {
+      return;
+    }
+
+    this.text = item.text;
+    this.selectedSize = item.labelSize;
+    this.render();
+    this.root.querySelector<HTMLInputElement>("#label-text")?.focus();
   }
 
   private addLog(level: LogLevel, message: string): void {
