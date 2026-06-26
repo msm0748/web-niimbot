@@ -15,7 +15,7 @@ export const LABEL_SIZES: Record<LabelSizeId, LabelSize> = {
   "12x30": { id: "12x30", label: "12 x 30 mm", widthMm: 12, lengthMm: 30 }
 };
 
-export const DEFAULT_LABEL_SIZE_ID: LabelSizeId = "12x30";
+export const DEFAULT_LABEL_SIZE_ID: LabelSizeId = "12x22";
 
 export function getLabelSize(id: LabelSizeId): LabelSize {
   return LABEL_SIZES[id];

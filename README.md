@@ -19,7 +19,7 @@ Open `http://127.0.0.1:5173` in Chrome.
 
 ## Print
 
-1. Select `12 x 22 mm` or `12 x 30 mm`.
+1. Select `12 x 22 mm` or `12 x 30 mm`. The default is `12 x 22 mm`.
 2. Type the label text.
 3. Click `Connect`.
 4. Select the NIIMBOT printer in Chrome's Bluetooth picker.

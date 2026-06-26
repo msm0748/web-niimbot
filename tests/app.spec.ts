@@ -4,7 +4,7 @@ test("renders the local D11_H printer UI", async ({ page }) => {
   await page.goto("/");
 
   await expect(page.getByRole("heading", { name: "NIIMBOT D11_H" })).toBeVisible();
-  await expect(page.getByLabel("Label size")).toHaveValue("12x30");
+  await expect(page.getByLabel("Label size")).toHaveValue("12x22");
   await expect(page.getByLabel("Text")).toBeVisible();
   await expect(page.getByRole("button", { name: "Connect" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Print" })).toBeVisible();
