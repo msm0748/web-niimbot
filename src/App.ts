@@ -1,6 +1,7 @@
 import { DEFAULT_LABEL_SIZE_ID, getLabelSize, LABEL_SIZES, type LabelSizeId } from "./domain/labels";
 import {
   clearPrintHistory,
+  hasPrintedText,
   loadPrintHistory,
   removePrintedLabel,
   savePrintedLabel,
@@ -31,6 +32,7 @@ export class App {
   private text = "";
   private printHistory: PrintHistoryItem[] = loadPrintHistory();
   private pendingDelete: PendingDelete | null = null;
+  private duplicateText: string | null = null;
   private logs: LogEntry[] = [
     { level: "info", message: "Ready. Open in Chrome on localhost.", timestamp: now() }
   ];
@@ -123,6 +125,7 @@ export class App {
           }
         </section>
         ${this.pendingDelete ? this.renderDeleteModal() : ""}
+        ${this.duplicateText ? this.renderDuplicateModal() : ""}
       </section>
     `;
 
@@ -182,7 +185,7 @@ export class App {
     });
 
     this.root.querySelector<HTMLButtonElement>("#cancel-delete-button")?.addEventListener("click", () => {
-      this.closeDeleteModal();
+      this.closeModal();
     });
 
     this.root.querySelector<HTMLButtonElement>("#confirm-delete-button")?.addEventListener("click", () => {
@@ -191,14 +194,18 @@ export class App {
 
     this.root.querySelector<HTMLDivElement>(".modal-backdrop")?.addEventListener("click", (event) => {
       if (event.target === event.currentTarget) {
-        this.closeDeleteModal();
+        this.closeModal();
       }
     });
 
     this.root.querySelector<HTMLDivElement>(".modal-backdrop")?.addEventListener("keydown", (event) => {
       if (event.key === "Escape") {
-        this.closeDeleteModal();
+        this.closeModal();
       }
+    });
+
+    this.root.querySelector<HTMLButtonElement>("#close-duplicate-button")?.addEventListener("click", () => {
+      this.closeModal();
     });
   }
 
@@ -214,6 +221,14 @@ export class App {
 
   private async print(): Promise<void> {
     try {
+      const trimmed = this.text.trim();
+
+      if (hasPrintedText(this.printHistory, trimmed)) {
+        this.duplicateText = trimmed;
+        this.render();
+        return;
+      }
+
       const rendered = renderTextLabel(this.text, getLabelSize(this.selectedSize));
       this.addLog("info", `Printing ${LABEL_SIZES[this.selectedSize].label} label...`);
       await this.printer.print(rendered);
@@ -254,8 +269,9 @@ export class App {
     this.addLog("info", "Printed label removed.");
   }
 
-  private closeDeleteModal(): void {
+  private closeModal(): void {
     this.pendingDelete = null;
+    this.duplicateText = null;
     this.render();
   }
 
@@ -275,6 +291,20 @@ export class App {
           <div class="modal-actions">
             <button class="text-button" id="cancel-delete-button" type="button">Cancel</button>
             <button class="danger-button" id="confirm-delete-button" type="button">Delete</button>
+          </div>
+        </section>
+      </div>
+    `;
+  }
+
+  private renderDuplicateModal(): string {
+    return `
+      <div class="modal-backdrop" role="presentation" tabindex="-1">
+        <section class="confirm-modal" role="dialog" aria-modal="true" aria-labelledby="duplicate-modal-title">
+          <h2 id="duplicate-modal-title">Same name already exists</h2>
+          <p>"${escapeHtml(this.duplicateText ?? "")}" is already saved in printed labels.</p>
+          <div class="modal-actions">
+            <button class="danger-button" id="close-duplicate-button" type="button">OK</button>
           </div>
         </section>
       </div>

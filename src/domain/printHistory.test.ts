@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   clearPrintHistory,
+  hasPrintedText,
   loadPrintHistory,
   removePrintedLabel,
   savePrintedLabel,
@@ -63,6 +64,15 @@ describe("print history", () => {
 
     expect(clearPrintHistory(storage)).toEqual([]);
     expect(loadPrintHistory(storage)).toEqual([]);
+  });
+
+  it("detects duplicate text regardless of label size", () => {
+    const history: PrintHistoryItem[] = [
+      { text: "문석민", labelSize: "12x22", printedAt: "2026-01-01T00:00:00.000Z" }
+    ];
+
+    expect(hasPrintedText(history, " 문석민 ")).toBe(true);
+    expect(hasPrintedText(history, "김철수")).toBe(false);
   });
 });
 

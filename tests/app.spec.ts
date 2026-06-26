@@ -84,3 +84,25 @@ test("clears all printed labels after confirmation", async ({ page }) => {
   await expect(page.getByText("No printed labels yet.")).toBeVisible();
   await expect(page.locator(".history-item")).toHaveCount(0);
 });
+
+test("blocks printing a duplicate stored text", async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem(
+      "web-niimbot.printHistory",
+      JSON.stringify([
+        { text: "문석민", labelSize: "12x22", printedAt: "2026-01-01T00:00:00.000Z" }
+      ])
+    );
+  });
+
+  await page.goto("/");
+  await page.getByLabel("Text").fill(" 문석민 ");
+  await page.getByRole("button", { name: "Print" }).click();
+
+  const dialog = page.getByRole("dialog", { name: "Same name already exists" });
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByText('"문석민" is already saved in printed labels.')).toBeVisible();
+
+  await dialog.getByRole("button", { name: "OK" }).click();
+  await expect(dialog).toBeHidden();
+});

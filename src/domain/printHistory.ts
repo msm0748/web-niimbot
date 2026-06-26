@@ -82,6 +82,16 @@ export function clearPrintHistory(storage: Storage = localStorage): PrintHistory
   return [];
 }
 
+export function hasPrintedText(history: PrintHistoryItem[], text: string): boolean {
+  const trimmed = text.trim();
+
+  if (!trimmed) {
+    return false;
+  }
+
+  return history.some((item) => item.text.trim() === trimmed);
+}
+
 export function sortPrintHistory(history: PrintHistoryItem[]): PrintHistoryItem[] {
   return [...history].sort((a, b) => {
     const textOrder = collator.compare(a.text, b.text);
