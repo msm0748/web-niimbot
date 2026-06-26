@@ -1,0 +1,23 @@
+{
+  "name": "web-niimbot",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "tsc && vite build",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "smoke": "playwright test"
+  },
+  "dependencies": {
+    "@mmote/niimbluelib": "0.0.1-alpha.40"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.45.0",
+    "jsdom": "^24.1.0",
+    "typescript": "^5.5.0",
+    "vite": "^5.3.0",
+    "vitest": "^1.6.0"
+  }
+}
