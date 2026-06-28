@@ -72,7 +72,7 @@ h2 {
 
 .controls {
   display: grid;
-  grid-template-columns: 160px 1fr auto;
+  grid-template-columns: 160px 1fr 104px auto;
   gap: 12px;
   align-items: end;
   margin-bottom: 20px;
@@ -97,6 +97,10 @@ select {
   padding: 0 12px;
   background: #ffffff;
   color: #202124;
+}
+
+.quantity-field input {
+  text-align: center;
 }
 
 .actions {

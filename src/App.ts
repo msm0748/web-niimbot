@@ -29,6 +29,7 @@ type PendingDelete =
 export class App {
   private readonly printer = new WebBluetoothNiimbotPrinter();
   private selectedSize: LabelSizeId = DEFAULT_LABEL_SIZE_ID;
+  private quantity = 1;
   private text = "";
   private printHistory: PrintHistoryItem[] = loadPrintHistory();
   private pendingDelete: PendingDelete | null = null;
@@ -68,6 +69,11 @@ export class App {
           <div class="field">
             <label for="label-text">Text</label>
             <input id="label-text" maxlength="40" value="${escapeHtml(this.text)}" placeholder="라벨 문구 입력" />
+          </div>
+
+          <div class="field quantity-field">
+            <label for="label-quantity">Quantity</label>
+            <input id="label-quantity" type="number" min="1" max="20" step="1" inputmode="numeric" value="${this.quantity}" />
           </div>
 
           <div class="actions">
@@ -152,6 +158,10 @@ export class App {
       void this.print();
     });
 
+    this.root.querySelector<HTMLInputElement>("#label-quantity")?.addEventListener("input", (event) => {
+      this.quantity = normalizeQuantity((event.target as HTMLInputElement).value);
+    });
+
     this.root.querySelector<HTMLButtonElement>("#connect-button")?.addEventListener("click", () => {
       void this.connect();
     });
@@ -230,10 +240,12 @@ export class App {
       }
 
       const rendered = renderTextLabel(this.text, getLabelSize(this.selectedSize));
-      this.addLog("info", `Printing ${LABEL_SIZES[this.selectedSize].label} label...`);
-      await this.printer.print(rendered);
+      const quantity = this.quantity;
+      this.addLog("info", `Printing ${quantity} x ${LABEL_SIZES[this.selectedSize].label} label...`);
+      await this.printer.print(rendered, quantity);
       this.printHistory = savePrintedLabel(this.printHistory, this.text, this.selectedSize);
       this.text = "";
+      this.quantity = 1;
       this.addLog("success", "Print finished.");
       this.root.querySelector<HTMLInputElement>("#label-text")?.focus();
     } catch (error) {
@@ -348,4 +360,14 @@ function escapeHtml(value: string): string {
     .replaceAll("<", "&lt;")
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;");
+}
+
+function normalizeQuantity(value: string): number {
+  const parsed = Number.parseInt(value, 10);
+
+  if (Number.isNaN(parsed)) {
+    return 1;
+  }
+
+  return Math.min(20, Math.max(1, parsed));
 }

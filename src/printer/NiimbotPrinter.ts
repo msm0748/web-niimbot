@@ -7,7 +7,7 @@ export interface NiimbotPrinter {
   readonly deviceName: string | undefined;
   connect(): Promise<void>;
   disconnect(): Promise<void>;
-  print(label: RenderedLabel): Promise<void>;
+  print(label: RenderedLabel, quantity?: number): Promise<void>;
 }
 
 export class PrinterUserError extends Error {

@@ -53,7 +53,7 @@ export class WebBluetoothNiimbotPrinter implements NiimbotPrinter {
     this.currentStatus = "disconnected";
   }
 
-  async print(label: RenderedLabel): Promise<void> {
+  async print(label: RenderedLabel, quantity = 1): Promise<void> {
     const client = this.client;
 
     if (!client?.isConnected()) {
@@ -66,7 +66,7 @@ export class WebBluetoothNiimbotPrinter implements NiimbotPrinter {
     const task = client.abstraction.newPrintTask(taskName, {
       labelType: LabelType.WithGaps,
       density: 3,
-      totalPages: 1,
+      totalPages: quantity,
       statusPollIntervalMs: 400,
       statusTimeoutMs: 15000,
       pageTimeoutMs: 15000
@@ -74,7 +74,7 @@ export class WebBluetoothNiimbotPrinter implements NiimbotPrinter {
 
     try {
       await task.printInit();
-      await task.printPage(encoded, 1);
+      await task.printPage(encoded, quantity);
       await task.waitForFinished();
     } finally {
       await task.printEnd().catch(() => false);
